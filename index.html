@@ -6,6 +6,9 @@
 		<!-- HTML Character Set -->
 		<meta charset="UTF-8">
 		
+		<!-- Set HTML Web Page Icon -->
+		<link rel="shortcut icon" href="favicon.ico" />
+		
 		<!-- Bootstrap Javascript Source Content -->
 		<script type='script/javascript' src='bootstrap/bootstrap.min.js'></script>
 		
@@ -14,8 +17,15 @@
 	</head>
 	<body>
 		<form>
+			<!-- Div for storing error messages -->
 			<div id='errormsg' class='text-danger'> 
 			</div>
+			
+			<!-- Div for storing copy notification -->
+			<div id='copymsg' class='text-success'>
+			</div>
+			
+			<!-- User Input Form -->
 			<div class='form-group'>
 				<!-- Your Time Zone -->
 				<label for='ytim'> Your Time Zone </label>
@@ -31,8 +41,10 @@
 
 				<!-- Button which generates the text-->
 				<button type='button' id='submit' class='btn btn-outline-primary' onclick='generate()'> Generate </button>
+
+				<!-- Button which copies the text-->
+				<button type='button' id='copy' class='btn btn-outline-primary' onclick='copytext()'> Copy Text </button>
 				
-				<label for='output'> Output Message </label>
 				
 				<!-- Output text area -->
 				<textarea class='form-control' id='output' name='output' rows='4' disabled> </textarea>
@@ -59,7 +71,7 @@
 			let ampm, nhours;
 
 			// If hours is greater than 12
-			if(hours => 12)
+			if(hours >= 12)
 			{
 				// Set ampm value to PM
 				ampm = 'PM';
@@ -76,10 +88,41 @@
 			{
 				// Set ampm value to PM
 				ampm = 'AM';
+				
+				// No need to change hours
+				nhours = hours;
 			}
 			
 			// Return the given hours, minutes combo as a converted am-pm time string.
 			return nhours.toString() + ':' + minutes.toString().padStart(2,'0') + ' ' + ampm;
+		}
+		
+		// Copies the text from the export field to the clipboard
+		function copytext()
+		{
+			// Get the element we are selecting the text of
+			let source = document.getElementById('output');
+			
+			// Briefly enable the source property
+			source.enabled = true;
+			
+			// Focus on the object
+			source.focus();
+			
+			// Select all text (desktop)
+			source.select();
+			
+			// Select all text (mobile)
+			source.setSelectionRange(0,99999);
+			
+			// Execute copy command on content
+			document.execCommand('copy');
+			
+			// Add the copy message to the page
+			document.getElementById('copymsg').innerHTML = 'Text copied to clipboard.';
+			
+			// Disable the source property again
+			source.enabled = false;
 		}
 		
 		// Runs any time a field is modified
@@ -172,7 +215,10 @@
 					catch(err)
 					{
 						// Add the error message to the page
-						document.getElementById('errormsg').innerHTML = err.message;
+						document.getElementById('errormsg').innerHTML = 'An Error Occured: "' + err.message + '". Please report this to the developer.';
+						
+						// Report the full error to the console log
+						console.log(err);
 					}
 				}
 			}
