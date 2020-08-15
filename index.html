@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<title> Time Zone Scheduling Tool </title>
+		
+		<!-- HTML Character Set -->
+		<meta charset="UTF-8">
+		
+		<!-- Bootstrap Javascript Source Content -->
+		<script type='script/javascript' src='bootstrap/bootstrap.min.js'></script>
+		
+		<!-- Bootstrap CSS Source Content -->
+		<link rel='stylesheet' href='bootstrap/bootstrap.min.css'>
+	</head>
+	<body>
+		<form>
+			<div id='errormsg' class='text-danger'> 
+			</div>
+			<div class='form-group'>
+				<!-- Your Time Zone -->
+				<label for='ytim'> Your Time Zone </label>
+				<input class='form-control' id='ytim' name='ytim' type='number' value='0' min='-12' max='12'>
+				
+				<!-- Other player time zone  -->
+				<label for='otim'> Other Player's Time Zone </label>
+				<input class='form-control' id='otim' name='otim' type='number' value='0' min='-12' max='12'>
+				
+				<!-- Enter times you can play (format: e.g. 15/08/2020 16:00) -->
+				<label for='times'> Enter times you can play (format: DD/MM/YYYY HH:MM) </label>
+				<textarea class='form-control' onchange='update()' id='times' name='times' rows='4' placeholder='DD/MM/YYYY HH:MM'></textarea>
+
+				<!-- Button which generates the text-->
+				<button type='button' id='submit' class='btn btn-outline-primary' onclick='generate()'> Generate </button>
+				
+				<label for='output'> Output Message </label>
+				
+				<!-- Output text area -->
+				<textarea class='form-control' id='output' name='output' rows='4' disabled> </textarea>
+				
+				<label> Follow me on twitter <a href='https://twitter.com/SirScrubbington'> @SirScrubbington </a> </label>
+			</div>
+		</form>
+	</body>
+	<script type='text/javascript'> 
+	
+		// Stores the days in a week
+		const days = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+		
+		// Stores the months in a year
+		const months = ['January','February','March',
+						'April','May','June',
+						'July','August','September',
+						'October','November','December'];
+		
+		// Converts 24-hour time to AM / PM time
+		function toAmPm(hours,minutes)
+		{
+			// If AM/PM value and updated hours
+			let ampm, nhours;
+
+			// If hours is greater than 12
+			if(hours => 12)
+			{
+				// Set ampm value to PM
+				ampm = 'PM';
+			
+				// If hours is NOT 12
+				if(hours != 12)
+				{
+					// If hours are greater than 12, get hours mod 12
+					nhours = hours % 12;
+				}
+				// 12 is a special case, we leave it alone :<
+			}
+			else // Hours are less than 12
+			{
+				// Set ampm value to PM
+				ampm = 'AM';
+			}
+			
+			// Return the given hours, minutes combo as a converted am-pm time string.
+			return nhours.toString() + ':' + minutes.toString().padStart(2,'0') + ' ' + ampm;
+		}
+		
+		// Runs any time a field is modified
+		function update()
+		{
+			// Retrieve suggested times from input obj
+			let times_in = document.getElementById('times');
+
+			// Retrieve output element from document (will write output string to)
+			let generate_elem = document.getElementById('submit');
+			
+			// If times are empty, disable the generate button. Otherwise, enable it.
+			generate_elem.disabled = times_in.value.length == 0 ? true : false;
+		}
+		
+		// Submit function, used when the submit button is clicked
+		// All code in one file, what a mess lol
+		function generate()
+		{
+			// Your time - retrieve from input obj
+			let ytim_in = parseInt(document.getElementById('ytim').value);
+			
+			// If your time is unset
+			if(!ytim_in)
+			{
+				// Assign to 0
+				ytim_in = 0;
+			}
+			
+			// Opponents' time - retrieve from input obj
+			let otim_in = parseInt(document.getElementById('otim').value);
+			
+			// If your opponents' time is unset
+			if(!otim_in)
+			{
+				// Assign to 0
+				otim_in = 0;
+			}
+			
+			// Delta time - difference between given times
+			let dtim_in = ytim_in - otim_in;
+			
+			// Retrieve suggested times from input obj
+			let times_in = document.getElementById('times').value;
+
+			// Retrieve output element from document (will write output string to)
+			let output_elem = document.getElementById('output');
+			
+			// Set the output element value to the default value
+			output_elem.value = 'I am available at the following times:\n';
+			
+			// Iterate over every datetime given
+			for(line of times_in.split('\n'))
+			{
+				// If the line is not blank
+				if(line)
+				{
+					try
+					{
+						// Split the line on the blank (DD/MM/YYYY[SPLIT HERE]HH:mm)
+						let spl = line.split(' ');
+
+						// Split the date/month/year on the slash [DD[/]MM[/]YYYY]
+						let dmy = spl[0].split('/');
+						
+						// Split the hours/minutes on the colon [HH[:]mm]
+						let hm = spl[1].split(':');
+
+						// Generate a date object using the above information, detract one from month as it is zero-indexed
+						let yDate = new Date(parseInt(dmy[2]),parseInt(dmy[1])-1,parseInt(dmy[0]),parseInt(hm[0]),parseInt(hm[1]),0);
+						
+						// Generate a new date object cloning the given time
+						let oDate = new Date(yDate);
+						
+						// Subtract the timezone difference from the new time
+						oDate.setHours(oDate.getHours() - dtim_in);
+						
+						// String for your time
+						let yStr = days[yDate.getDay()] + ' ' + yDate.getDate() + ' ' + months[yDate.getMonth()] + ' ' + toAmPm(yDate.getHours(),yDate.getMinutes()) + ' UTC ' + ytim_in;
+						
+						// string for opponents' time
+						let oStr = days[oDate.getDay()] + ' ' + oDate.getDate() + ' ' + months[oDate.getMonth()] + ' ' + toAmPm(oDate.getHours(),oDate.getMinutes()) + ' UTC ' + otim_in;
+						
+						// Generate the complete string 
+						let cStr = oStr + ' (' + yStr + ')\n';
+						
+						// Add the final string to the output element
+						output_elem.value += cStr;
+					}
+					catch(err)
+					{
+						// Add the error message to the page
+						document.getElementById('errormsg').innerHTML = err.message;
+					}
+				}
+			}
+			
+			// Add politeness message to the end of the output string
+			output_elem.value += 'Please let me know which time(s) work for you, otherwise we can work something out!\n';
+		}
+	</script>
+</html>
