@@ -9,6 +9,8 @@ A program for converting times between timezones for scheduling tournament match
 The link to the live application can be found 
 [here](https://damon-murdoch.github.io/set-scheduler).
 
+Link: https://damon-murdoch.github.io/set-scheduler
+
 ## Future Changes
 A list of future planned fixes / improvements are listed below.
 
